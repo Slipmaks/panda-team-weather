@@ -1,0 +1,7 @@
+/* edit default styles */
+body {
+  margin: 0;
+  font-family: "Roboto", "Arial";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
