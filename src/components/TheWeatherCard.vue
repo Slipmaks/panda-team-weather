@@ -2,7 +2,8 @@
   <div class="main default">
     <div class="default">
       <input
-        v-debounce:1000ms.cancelonempty="myFunc"
+        v-model="cityName"
+        v-debounce:1000ms.cancelonempty="getCities"
         type="text"
         options="options"
       />
@@ -31,11 +32,19 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+import { geoOptionsApi, GEO_URL_API } from "../api";
 const API_WEATHER = "63681b42bf0cf1ef874d7bbd33c652a5";
-const API_GEO = "74908b3243msh2d06d3bf0c24ebep108da1jsn4c0212c9701d";
+const cityName = ref("");
 
-const myFunc = () => {
-  alert("hello");
+const getCities = () => {
+  fetch(
+    `${GEO_URL_API}/cities?minPopulation=500000&namePrefix=${cityName.value}&sort=-population`,
+    geoOptionsApi
+  )
+    .then((response) => response.json())
+    .then((response) => console.log(response))
+    .catch((err) => console.error(err));
 };
 </script>
 
