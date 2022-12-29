@@ -1,12 +1,18 @@
 <template>
   <div class="main default">
-    <div class="default">
-      <input
-        v-model="cityName"
-        v-debounce:1000ms.cancelonempty="getCities"
-        type="text"
-        options="options"
-      />
+    <div class="default search-featured">
+      <div class="search">
+        <input
+          v-model="cityName"
+          v-debounce:1000ms.cancelonempty="getCities"
+          type="text"
+          options="options"
+        />
+        <ul class="search-results">
+          <li>res</li>
+          <li>res</li>
+        </ul>
+      </div>
       <button>В избранное</button>
     </div>
 
@@ -34,7 +40,7 @@
 <script setup>
 import { ref } from "vue";
 import { geoOptionsApi, GEO_URL_API } from "../api";
-const API_WEATHER = "63681b42bf0cf1ef874d7bbd33c652a5";
+
 const cityName = ref("");
 
 const getCities = () => {
@@ -51,12 +57,46 @@ const getCities = () => {
 <style scoped>
 .main {
   background-color: hsl(0, 0%, 99%);
+  max-width: 320px;
 }
 .default {
-  border: 1px solid gray;
+  border: 1px solid hsl(0, 0%, 92%);
   border-radius: 1rem;
   padding: 0.5rem;
   margin: 0.5rem;
+}
+.search-featured {
+  display: flex;
+  justify-content: space-between;
+}
+.search {
+  display: inline-block;
+  position: relative;
+}
+.search input {
+  outline: none;
+  border: 1px solid hsl(0, 0%, 92%);
+}
+.search input[type="text" i] {
+  padding: 4px 8px;
+}
+.search-results {
+  position: absolute;
+  z-index: 10;
+
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.search-results li {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid hsl(0, 0%, 92%);
+  background-color: hsl(0, 0%, 98%);
+  transition: all 0.3s ease-in-out;
+}
+.search-results li:hover {
+  background-color: hsl(0, 0%, 92%);
 }
 .weather {
 }
