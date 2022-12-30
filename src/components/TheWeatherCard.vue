@@ -8,7 +8,7 @@
           type="text"
           options="options"
         />
-        <ul class="search-results">
+        <ul class="search-results" v-if="searchResults && showSearchResults">
           <li
             v-for="item in searchResults"
             :key="item.id"
@@ -27,10 +27,12 @@
         <button>Неделя</button>
       </div>
       <div>
-        <p v-if="!weather">Empty</p>
-        <p v-else>
-          {{ weather.name }}
-        </p>
+        <div v-if="!weather">Empty</div>
+        <div v-else>
+          <h2>{{ weather.name }}</h2>
+
+          <img :src="weatherStatusImg" v-if="weatherStatusImg" />
+        </div>
       </div>
     </div>
 
@@ -41,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import {
   geoOptionsApi,
   GEO_URL_API,
@@ -51,8 +53,9 @@ import {
 
 const cityName = ref("");
 const searchResults = ref();
+const showSearchResults = ref(false);
 const weather = ref();
-
+const weatherStatusImg = ref();
 const getCities = () => {
   fetch(
     `${GEO_URL_API}/cities?minPopulation=500000&namePrefix=${cityName.value}&sort=-population`,
@@ -61,19 +64,23 @@ const getCities = () => {
     .then((response) => response.json())
     .then((response) => {
       searchResults.value = response.data;
-      console.log(response.data);
+      showSearchResults.value = true;
     })
     .catch((err) => console.error(err));
 };
 const getCityWeather = (lat, lon) => {
-  console.log(lat, lon);
+  const fixLat = lat.toFixed(2);
+  const fixLon = lon.toFixed(2);
+  showSearchResults.value = false;
+  console.log(fixLat, fixLon);
   fetch(
-    `${OPEN_WEATHER_URL_API}/weather?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}`
+    `${OPEN_WEATHER_URL_API}/weather?lat=${fixLat}&lon=${fixLon}&units=metric&appid=${openWeatherApiKey}`
   )
     .then((response) => response.json())
     .then((response) => {
       console.log(response);
       weather.value = response;
+      weatherStatusImg.value = `http://openweathermap.org/img/wn/${response.weather[0].icon}@2x.png`;
     })
     .catch((err) => console.log(err));
 };
