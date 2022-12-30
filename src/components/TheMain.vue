@@ -11,13 +11,17 @@
 <script setup>
 import TheWeatherCard from "./TheWeatherCard.vue";
 import TheEmptyWeatherCard from "./TheEmptyWeatherCard.vue";
-import { ref, computed } from "vue";
+import { ref } from "vue";
 
-const theCards = ref([{ id: Math.floor(Math.random() * 100) }]);
+const theCards = ref([
+  { id: Math.floor(Math.random() * 100), featured: false, city: "" },
+]);
 
 const createNewCard = () => {
   const newCard = {
     id: Math.floor(Math.random() * 100),
+    featured: false,
+    city: "",
   };
   theCards.value.push(newCard);
 };

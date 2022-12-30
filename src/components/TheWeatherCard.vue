@@ -9,8 +9,13 @@
           options="options"
         />
         <ul class="search-results">
-          <li>res</li>
-          <li>res</li>
+          <li
+            v-for="item in searchResults"
+            :key="item.id"
+            @click="getCityWeather(item.latitude, item.longitude)"
+          >
+            {{ item.city }}, {{ item.countryCode }}
+          </li>
         </ul>
       </div>
       <button>В избранное</button>
@@ -22,11 +27,9 @@
         <button>Неделя</button>
       </div>
       <div>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto
-          culpa voluptate repellat. Provident nostrum sed a velit dicta tempora
-          dolore, aspernatur fugit iste, ratione repellat assumenda magnam ullam
-          repudiandae porro.
+        <p v-if="!weather">Empty</p>
+        <p v-else>
+          {{ weather.name }}
         </p>
       </div>
     </div>
@@ -39,9 +42,16 @@
 
 <script setup>
 import { ref } from "vue";
-import { geoOptionsApi, GEO_URL_API } from "../api";
+import {
+  geoOptionsApi,
+  GEO_URL_API,
+  openWeatherApiKey,
+  OPEN_WEATHER_URL_API,
+} from "../api";
 
 const cityName = ref("");
+const searchResults = ref();
+const weather = ref();
 
 const getCities = () => {
   fetch(
@@ -49,8 +59,23 @@ const getCities = () => {
     geoOptionsApi
   )
     .then((response) => response.json())
-    .then((response) => console.log(response))
+    .then((response) => {
+      searchResults.value = response.data;
+      console.log(response.data);
+    })
     .catch((err) => console.error(err));
+};
+const getCityWeather = (lat, lon) => {
+  console.log(lat, lon);
+  fetch(
+    `${OPEN_WEATHER_URL_API}/weather?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}`
+  )
+    .then((response) => response.json())
+    .then((response) => {
+      console.log(response);
+      weather.value = response;
+    })
+    .catch((err) => console.log(err));
 };
 </script>
 
@@ -61,7 +86,6 @@ const getCities = () => {
 }
 .default {
   border: 1px solid hsl(0, 0%, 92%);
-  border-radius: 1rem;
   padding: 0.5rem;
   margin: 0.5rem;
 }
@@ -93,6 +117,7 @@ const getCities = () => {
   padding: 0.25rem 0.5rem;
   border: 1px solid hsl(0, 0%, 92%);
   background-color: hsl(0, 0%, 98%);
+  cursor: pointer;
   transition: all 0.3s ease-in-out;
 }
 .search-results li:hover {
