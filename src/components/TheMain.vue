@@ -1,8 +1,13 @@
 <template>
   <div>
-    <h1>Главная</h1>
+    <h1>Головна</h1>
     <div class="main-wrapper">
-      <TheWeatherCard v-for="item in theCards" :key="item.id" />
+      <TheWeatherCard
+        v-for="item in theCards"
+        :key="item.id"
+        @delete="deleteCard(item.id)"
+        @to-feature="feature"
+      />
       <TheEmptyWeatherCard @click="createNewCard" v-if="theCards.length <= 4" />
     </div>
   </div>
@@ -22,8 +27,17 @@ const createNewCard = () => {
     id: Math.floor(Math.random() * 100),
     featured: false,
     city: "",
+    temp: "",
+    feels_like: "",
   };
   theCards.value.push(newCard);
+};
+const deleteCard = (id) => {
+  theCards.value = theCards.value.filter((e) => e.id !== id);
+};
+const feature = (o, id) => {
+  console.log(o);
+  console.log(id);
 };
 </script>
 

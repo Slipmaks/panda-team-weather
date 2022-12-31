@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Избранное</h1>
+    <h1>Обране</h1>
   </div>
 </template>
 

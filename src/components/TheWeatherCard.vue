@@ -19,7 +19,9 @@
           </li>
         </ul>
       </div>
-      <button>Обране</button>
+      <button v-if="weather" @click="$emit('toFeature', weather)">
+        Обране
+      </button>
     </div>
 
     <div class="default" v-if="weather">
@@ -44,11 +46,18 @@
             </p>
           </div>
         </div>
-        <div class="default" v-if="chartData.labels.length">
-          <Line :options="chartOptions" :data="chartData" />
+        <div class="default" v-if="chartDayData.labels.length && isDayWeather">
+          <Line :options="chartOptions" :data="chartDayData" />
+        </div>
+        <div
+          class="default"
+          v-if="chartWeekData.labels.length && !isDayWeather"
+        >
+          <Line :options="chartOptions" :data="chartWeekData" />
         </div>
       </div>
     </div>
+    <button @click="$emit('delete')">Видалити</button>
   </div>
 </template>
 
@@ -80,7 +89,7 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
+defineEmits(["delete", "toFeature"]);
 const cityName = ref("");
 const searchResults = ref();
 const showSearchResults = ref(false);
@@ -92,7 +101,17 @@ const chartOptions = {
   maintainAspectRatio: false,
 };
 
-const chartData = ref({
+const chartDayData = ref({
+  labels: [],
+  datasets: [
+    {
+      label: "Погодинний прогноз",
+      backgroundColor: "#ebebeb",
+      data: [],
+    },
+  ],
+});
+const chartWeekData = ref({
   labels: [],
   datasets: [
     {
@@ -141,8 +160,8 @@ const getHourlyWeather = (city, code) => {
         let item = response.list[i];
         let date = new Date(item.dt_txt);
         let hourFormat = date.getHours() + " година";
-        chartData.value.labels.push(hourFormat);
-        chartData.value.datasets[0].data.push(item.main.temp);
+        chartDayData.value.labels.push(hourFormat);
+        chartDayData.value.datasets[0].data.push(item.main.temp);
       }
     })
     .catch((err) => console.log(err));
