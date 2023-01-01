@@ -1,5 +1,5 @@
 <template>
-  <div class="main default">
+  <div class="main default" :class="[toFeatureBtnStatus ? 'featured' : '']">
     <div class="default search-featured">
       <div class="search">
         <input
@@ -19,8 +19,17 @@
           </li>
         </ul>
       </div>
-      <button v-if="weather" @click="$emit('toFeature', weather)">
+      <button
+        v-if="weather && !toFeatureBtnStatus"
+        @click="$emit('toFeature', weather, weather.name, props.weatherId)"
+      >
         Обране
+      </button>
+      <button
+        v-if="weather && toFeatureBtnStatus"
+        @click="$emit('removeFeature', weather.name)"
+      >
+        Убрати
       </button>
     </div>
 
@@ -32,7 +41,7 @@
       <div v-if="isDayWeather">
         <div>
           <div>
-            <h2>{{ weather.name }}, {{ weather.sys.country }}</h2>
+            <h2>{{ weather.name }}, {{ weather.sys?.country }}</h2>
           </div>
           <div class="current-temp">
             <img :src="weatherStatusImg" v-if="weatherStatusImg" />
@@ -62,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref, toRefs } from "vue";
 import {
   geoOptionsApi,
   GEO_URL_API,
@@ -89,7 +98,8 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-defineEmits(["delete", "toFeature"]);
+defineEmits(["delete", "toFeature", "removeFeature"]);
+const props = defineProps(["weatherId", "weatherFeatured"]);
 const cityName = ref("");
 const searchResults = ref();
 const showSearchResults = ref(false);
@@ -130,19 +140,18 @@ const getCities = () => {
     .then((response) => response.json())
     .then((response) => {
       searchResults.value = response.data;
-      console.log(response.data);
       showSearchResults.value = true;
     })
     .catch((err) => console.error(err));
 };
 const getCityWeather = (city, code) => {
   showSearchResults.value = false;
+  cityName.value = "";
   fetch(
     `${OPEN_WEATHER_URL_API}/weather?q=${city},${code}&lang=ua&units=metric&appid=${openWeatherApiKey}`
   )
     .then((response) => response.json())
     .then((response) => {
-      console.log(response);
       weather.value = response;
       weatherStatusImg.value = `http://openweathermap.org/img/wn/${response.weather[0].icon}.png`;
       getHourlyWeather(city, code);
@@ -155,7 +164,6 @@ const getHourlyWeather = (city, code) => {
   )
     .then((response) => response.json())
     .then((response) => {
-      console.log(response);
       for (let i = 0; i < response.list.length; i++) {
         let item = response.list[i];
         let date = new Date(item.dt_txt);
@@ -166,6 +174,8 @@ const getHourlyWeather = (city, code) => {
     })
     .catch((err) => console.log(err));
 };
+const { weatherFeatured: currentFeatureStatus } = toRefs(props);
+const toFeatureBtnStatus = computed(() => currentFeatureStatus.value);
 </script>
 
 <style scoped>
@@ -218,12 +228,8 @@ const getHourlyWeather = (city, code) => {
   white-space: nowrap;
   align-items: center;
 }
-.weather {
-}
-.day {
-}
-.week {
-}
-.chart {
+
+.featured {
+  border: 1px solid rgb(255, 191, 0);
 }
 </style>

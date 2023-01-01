@@ -3,41 +3,52 @@
     <h1>Головна</h1>
     <div class="main-wrapper">
       <TheWeatherCard
-        v-for="item in theCards"
+        v-for="item in currentCard"
         :key="item.id"
-        @delete="deleteCard(item.id)"
-        @to-feature="feature"
+        @delete="deleteWeather(item.id)"
+        @to-feature="addFeature"
+        @remove-feature="deleteFeature"
+        :weather-id="item.id"
+        :weather-featured="item.featured"
       />
-      <TheEmptyWeatherCard @click="createNewCard" v-if="theCards.length <= 4" />
+      <TheAddWeatherCard @click="createNewCard" v-if="theCards.length <= 4" />
     </div>
   </div>
 </template>
 
 <script setup>
 import TheWeatherCard from "./TheWeatherCard.vue";
-import TheEmptyWeatherCard from "./TheEmptyWeatherCard.vue";
-import { ref } from "vue";
+import TheAddWeatherCard from "./TheAddWeatherCard.vue";
+import { ref, inject, toRefs } from "vue";
 
-const theCards = ref([
-  { id: Math.floor(Math.random() * 100), featured: false, city: "" },
-]);
-
+const props = defineProps(["theCards", "theFeatured"]);
+const { theCards: currentCard } = toRefs(props);
 const createNewCard = () => {
   const newCard = {
     id: Math.floor(Math.random() * 100),
     featured: false,
-    city: "",
-    temp: "",
-    feels_like: "",
+    data: null,
   };
-  theCards.value.push(newCard);
+  props.theCards.push(newCard);
 };
-const deleteCard = (id) => {
-  theCards.value = theCards.value.filter((e) => e.id !== id);
-};
-const feature = (o, id) => {
-  console.log(o);
-  console.log(id);
+const deleteWeather = inject("delete");
+const deleteFeature = inject("removeFeature");
+const addFeature = (data, name, id) => {
+  const isFeatured = props.theFeatured.filter((e) => e.data.name === name);
+  if (isFeatured.length) {
+    return;
+  } else {
+    props.theCards.filter((e) => {
+      if (e.id === id) {
+        if (props.theFeatured.length < 5) {
+          e.featured = true;
+          e.data = data;
+          props.theFeatured.push(e);
+          console.log(props.theFeatured);
+        }
+      }
+    });
+  }
 };
 </script>
 
