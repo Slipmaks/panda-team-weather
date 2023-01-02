@@ -21,13 +21,13 @@
       </div>
       <button
         v-if="weather && !toFeatureBtnStatus"
-        @click="$emit('toFeature', weather, weather.name, props.weatherId)"
+        @click="cardToFeature(weather, weather.name, props.weatherId)"
       >
         Обране
       </button>
       <button
         v-if="weather && toFeatureBtnStatus"
-        @click="$emit('removeFeature', weather.name)"
+        @click="removeFromFeature(weather.name)"
       >
         Убрати
       </button>
@@ -66,12 +66,12 @@
         </div>
       </div>
     </div>
-    <button @click="$emit('delete')">Видалити</button>
+    <button @click="deleteCard">Видалити</button>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, toRefs } from "vue";
+import { computed, ref, toRefs, inject } from "vue";
 import {
   geoOptionsApi,
   GEO_URL_API,
@@ -98,7 +98,9 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-defineEmits(["delete", "toFeature", "removeFeature"]);
+
+const emit = defineEmits(["delete", "toFeature", "removeFeature"]);
+
 const props = defineProps(["weatherId", "weatherFeatured"]);
 const cityName = ref("");
 const searchResults = ref();
@@ -110,7 +112,7 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
 };
-
+const featured = inject("theFeatured");
 const chartDayData = ref({
   labels: [],
   datasets: [
@@ -131,7 +133,7 @@ const chartWeekData = ref({
     },
   ],
 });
-
+const isFeatured = ref(false);
 const getCities = () => {
   fetch(
     `${GEO_URL_API}/cities?namePrefix=${cityName.value}&sort=-population`,
@@ -147,11 +149,21 @@ const getCities = () => {
 const getCityWeather = (city, code) => {
   showSearchResults.value = false;
   cityName.value = "";
+  const featuredCity = featured.filter((e) => {
+    if (e.data.name === city) {
+      return e;
+    }
+  });
+  if (featuredCity.length) {
+    console.log(featuredCity);
+    isFeatured.value = true;
+  }
   fetch(
     `${OPEN_WEATHER_URL_API}/weather?q=${city},${code}&lang=ua&units=metric&appid=${openWeatherApiKey}`
   )
     .then((response) => response.json())
     .then((response) => {
+      isFeatured.value = false;
       weather.value = response;
       weatherStatusImg.value = `http://openweathermap.org/img/wn/${response.weather[0].icon}.png`;
       getHourlyWeather(city, code);
@@ -174,8 +186,19 @@ const getHourlyWeather = (city, code) => {
     })
     .catch((err) => console.log(err));
 };
-const { weatherFeatured: currentFeatureStatus } = toRefs(props);
-const toFeatureBtnStatus = computed(() => currentFeatureStatus.value);
+const removeFromFeature = (name) => {
+  isFeatured.value = false;
+  emit("removeFeature", name);
+};
+const deleteCard = () => {
+  emit("delete");
+};
+const cardToFeature = (data, name, id) => {
+  isFeatured.value = true;
+  emit("toFeature", data, name, id);
+};
+// const { weatherFeatured: currentFeatureStatus } = toRefs(props);
+const toFeatureBtnStatus = computed(() => isFeatured.value);
 </script>
 
 <style scoped>

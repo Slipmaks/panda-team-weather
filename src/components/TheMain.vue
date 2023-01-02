@@ -3,7 +3,7 @@
     <h1>Головна</h1>
     <div class="main-wrapper">
       <TheWeatherCard
-        v-for="item in currentCard"
+        v-for="item in props.theCards"
         :key="item.id"
         @delete="deleteWeather(item.id)"
         @to-feature="addFeature"
@@ -22,7 +22,7 @@ import TheAddWeatherCard from "./TheAddWeatherCard.vue";
 import { ref, inject, toRefs } from "vue";
 
 const props = defineProps(["theCards", "theFeatured"]);
-const { theCards: currentCard } = toRefs(props);
+
 const createNewCard = () => {
   const newCard = {
     id: Math.floor(Math.random() * 100),
