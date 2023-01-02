@@ -16,6 +16,7 @@
   </div>
 </template>
 <script setup>
+import { defaultStore } from "./store";
 import TheLogo from "./components/TheLogo.vue";
 import TheMain from "./components/TheMain.vue";
 import TheFeatured from "./components/TheFeatured.vue";
@@ -33,29 +34,9 @@ if (localStorage.getItem("featured") === null) {
     console.log(theFeatured.value);
   }
 }
-const success = (pos) => {
-  const lat = pos.coords.latitude;
-  const lon = pos.coords.longitude;
-  fetch(
-    `${OPEN_WEATHER_URL_API}/weather?lat=${lat}&lon=${lon}&units=metric&cnt=8&lang=ua&appid=${openWeatherApiKey}`
-  )
-    .then((response) => response.json())
-    .then((response) => {
-      const currentLocation = {
-        id: Math.floor(Math.random() * 100),
-        featured: false,
-        data: response,
-      };
-      console.log(currentLocation);
-      theCards.value.push(currentLocation);
-    })
-    .catch((err) => console.log(err));
-};
-const error = (err) => {
-  console.log(err);
-};
-navigator.geolocation.getCurrentPosition(success, error);
+
 onMounted(() => {
+  store.getCurrentLocationWeather();
   watchEffect(() => {
     localStorage.setItem("featured", JSON.stringify(theFeatured.value));
   });
@@ -76,6 +57,9 @@ const deleteFeature = (name) => {
 provide("theFeatured", theFeatured.value);
 provide("delete", deleteCard);
 provide("removeFeature", deleteFeature);
+
+// pinia
+const store = defaultStore();
 </script>
 <style scoped>
 .container {
