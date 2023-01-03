@@ -11,9 +11,8 @@
         :weather-id="item.id"
         :weather-featured="item.featured"
       /> -->
-
       <WeatherCard
-        v-for="item in store.theCards"
+        v-for="item in store.cards"
         :key="item.id"
         :weather-data="item.data"
         :weather-id="item.id"

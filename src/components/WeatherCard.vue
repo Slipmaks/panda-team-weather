@@ -34,7 +34,7 @@
       </button> -->
     </div>
 
-    <div class="default" v-if="weatherData">
+    <div class="default" v-if="weatherData && loaded">
       <div>
         <button @click="isDayWeather = true">День</button>
         <button @click="isDayWeather = false">Неділя</button>
@@ -44,7 +44,7 @@
           <div>
             <h2>{{ weatherData.name }}, {{ weatherData.sys?.country }}</h2>
           </div>
-          <div class="current-temp">
+          <div class="current-temp" v-if="loaded">
             <img :src="weatherStatusImg" v-if="weatherStatusImg" />
             <h2>{{ Math.round(weatherData.main.temp) }} °C</h2>
           </div>
@@ -57,7 +57,7 @@
             </p>
           </div>
         </div>
-        <div class="default" v-if="props.dailyChart">
+        <div class="default">
           <Line :options="chartOptions" :data="chartDayData" />
         </div>
         <!-- <div
@@ -75,7 +75,15 @@
 <script setup>
 import { Line } from "vue-chartjs";
 import { defaultStore } from "../store";
-import { ref, onUpdated, onMounted, toRefs, reactive, computed } from "vue";
+import {
+  ref,
+  onUpdated,
+  onMounted,
+  toRefs,
+  reactive,
+  computed,
+  watchEffect,
+} from "vue";
 import { GEO_URL_API, geoOptionsApi } from "../api";
 import {
   Chart as ChartJS,
@@ -106,6 +114,7 @@ const props = defineProps([
 ]);
 const { weatherData, weatherId, weeklyChart, weatherFeature, dailyChart } =
   toRefs(props);
+console.log(dailyChart.value);
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -113,17 +122,8 @@ const chartOptions = {
 
 const labelsData = ref([]);
 const tempData = ref([]);
-if (dailyChart.value) {
-  for (let i = 0; i < dailyChart.value[0].length; i++) {
-    let item = dailyChart.value[0][i];
+const loaded = ref(false);
 
-    let date = new Date(item.dt_txt);
-    let hourFormat = date.getHours() + " година";
-
-    labelsData.value.push(hourFormat);
-    tempData.value.push(item.main.temp);
-  }
-}
 const chartDayData = computed(() => {
   return {
     labels: labelsData.value,
@@ -136,16 +136,6 @@ const chartDayData = computed(() => {
     ],
   };
 });
-// reactive({
-//   labels: [],
-//   datasets: [
-//     {
-//       label: "Погодинний прогноз",
-//       backgroundColor: "#ebebeb",
-//       data: [],
-//     },
-//   ],
-// });
 
 const store = defaultStore();
 const searchResults = ref("");
@@ -153,17 +143,19 @@ const showSearchResults = ref(false);
 const isDayWeather = ref("true");
 const cityName = ref("");
 const weatherStatusImg = ref();
+setTimeout(() => {
+  for (let i = 0; i < dailyChart.value[0].length; i++) {
+    let item = dailyChart.value[0][i];
 
-onUpdated(() => {
-  // if (dailyChart.value?.labels) {
-  //   chartDayData.labels = dailyChart.value.labels;
-  //   chartDayData.datasets[0].data = dailyChart.value.temp;
-  //   console.log(chartDayData.datasets);
-  // }
+    let date = new Date(item.dt_txt);
+    let hourFormat = date.getHours() + " година";
 
-  console.log(weatherData.value?.weather[0].icon);
-  weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
-});
+    labelsData.value.push(hourFormat);
+    tempData.value.push(item.main.temp);
+  }
+  loaded.value = true;
+}, 600);
+
 const getCities = () => {
   fetch(
     `${GEO_URL_API}/cities?namePrefix=${cityName.value}&sort=-population`,
@@ -177,10 +169,29 @@ const getCities = () => {
     .catch((err) => console.error(err));
 };
 const getCityWeather = (city, code, id) => {
+  loaded.value = false;
   showSearchResults.value = false;
   cityName.value = "";
 
   store.getWeather(city, code, id);
+
+  setTimeout(() => {
+    if (weatherData.value?.weather[0].icon) {
+      weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
+    }
+    if (dailyChart.value?.length) {
+      for (let i = 0; i < dailyChart.value[0].length; i++) {
+        let item = dailyChart.value[0][i];
+
+        let date = new Date(item.dt_txt);
+        let hourFormat = date.getHours() + " година";
+
+        labelsData.value.push(hourFormat);
+        tempData.value.push(item.main.temp);
+      }
+    }
+    loaded.value = true;
+  }, 600);
 };
 </script>
 <style scoped>

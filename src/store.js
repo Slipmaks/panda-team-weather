@@ -18,9 +18,9 @@ export const defaultStore = defineStore("main", {
       this.theCards.push({
         id: Math.floor(Math.random() * 100),
         featured: false,
-        data: null,
-        dailyChart: null,
-        weeklyChart: null,
+        data: {},
+        dailyChart: [],
+        weeklyChart: [],
       });
     },
     getCurrentLocationWeather() {
@@ -55,17 +55,12 @@ export const defaultStore = defineStore("main", {
     },
     getWeather(city, code, id) {
       const currentCard = this.theCards.filter((e) => e.id === id);
-
       fetch(
         `${OPEN_WEATHER_URL_API}/weather?q=${city},${code}&lang=ua&units=metric&appid=${openWeatherApiKey}`
       )
         .then((response) => response.json())
         .then((response) => {
           currentCard[0].data = response;
-          // console.log(currentCard[0]);
-
-          // weatherStatusImg.value = `http://openweathermap.org/img/wn/${response.weather[0].icon}.png`;
-          // getHourlyWeather(city, code);
         })
         .then(() => {
           const dailyChart = this.getDailyChart(city, code);
@@ -82,16 +77,6 @@ export const defaultStore = defineStore("main", {
           .then((response) => response.json())
           .then((response) => {
             dayChart.push(response.list);
-            // for (let i = 0; i < response.list.length; i++) {
-            //   let item = response.list[i];
-            //   let date = new Date(item.dt_txt);
-            //   let hourFormat = date.getHours() + " година";
-            //   dayChart.labels.push(hourFormat);
-            //   dayChart.temp.push(item.main.temp);
-
-            // chartDayData.value.labels.push(hourFormat);
-            // chartDayData.value.datasets[0].data.push(item.main.temp);
-            // }
           })
           .catch((err) => console.log(err));
       } else {
@@ -101,21 +86,18 @@ export const defaultStore = defineStore("main", {
           .then((response) => response.json())
           .then((response) => {
             dayChart.push(response.list);
-
-            // for (let i = 0; i < response.list.length; i++) {
-            //   let item = response.list[i];
-            //   let date = new Date(item.dt_txt);
-            //   let hourFormat = date.getHours() + " година";
-
-            //   dayChart.labels.push(hourFormat);
-            //   dayChart.temp.push(item.main.temp);
-            // }
           })
           .catch((err) => console.log(err));
       }
-      console.log(dayChart);
       return dayChart;
     },
   },
-  getters: {},
+  getters: {
+    cards(state) {
+      return state.theCards;
+    },
+    featured(state) {
+      return state.theFeaturedCards;
+    },
+  },
 });
