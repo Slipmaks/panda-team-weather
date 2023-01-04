@@ -20,18 +20,10 @@
           </li>
         </ul>
       </div>
-      <!-- <button
-        v-if="props.weatherFeature"
-        @click="cardToFeature(weather, weather.name, props.weatherId)"
-      >
-        Обране
-      </button>
-      <button
-        v-if="!props.weatherFeature"
-        @click="removeFromFeature(weather.name)"
-      >
+      <button v-if="!weatherFeature" @click="cardToFeature">Обране</button>
+      <button v-if="weatherFeature && loaded" @click="removeFromFeature">
         Убрати
-      </button> -->
+      </button>
     </div>
 
     <div class="default" v-if="weatherData && loaded">
@@ -39,52 +31,46 @@
         <button @click="isDayWeather = true">День</button>
         <button @click="isDayWeather = false">Неділя</button>
       </div>
-      <div v-if="isDayWeather">
+      <div>
         <div>
           <div>
             <h2>{{ weatherData.name }}, {{ weatherData.sys?.country }}</h2>
           </div>
-          <div class="current-temp" v-if="loaded">
+          <div class="current-temp" v-if="loaded && isDayWeather">
             <img :src="weatherStatusImg" v-if="weatherStatusImg" />
-            <h2>{{ Math.round(weatherData.main.temp) }} °C</h2>
+            <h2>{{ Math.round(weatherData.main?.temp) }} °C</h2>
           </div>
-          <div>
+          <div class="current-temp" v-if="loaded && !isDayWeather">
+            <p>Середня температура:</p>
+            <h2>{{ Math.round(avgWeekTemp) }} °C</h2>
+          </div>
+          <div v-if="isDayWeather">
             <p>
               Відчувається як:
-              {{ Math.round(weatherData.main.feels_like) }} °C.
-              {{ weatherData.weather[0].description.charAt(0).toUpperCase()
-              }}{{ weatherData.weather[0].description.slice(1) }}
+              {{ Math.round(weatherData.main?.feels_like) }} °C.
+              {{ weatherData?.weather[0].description.charAt(0).toUpperCase()
+              }}{{ weatherData?.weather[0].description.slice(1) }}
             </p>
           </div>
         </div>
-        <div class="default">
+        <div class="default" v-if="isDayWeather && chartData.length">
           <Line :options="chartOptions" :data="chartDayData" />
         </div>
-        <!-- <div
-          class="default"
-          v-if="chartWeekData.labels.length && !isDayWeather"
-        >
+        <div class="default" v-if="!isDayWeather">
           <Line :options="chartOptions" :data="chartWeekData" />
-        </div> -->
+        </div>
       </div>
     </div>
-    <!-- <button @click="deleteCard">Видалити</button> -->
+    <button @click="deleteCard">Видалити</button>
   </div>
 </template>
 
 <script setup>
 import { Line } from "vue-chartjs";
 import { defaultStore } from "../store";
-import {
-  ref,
-  onUpdated,
-  onMounted,
-  toRefs,
-  reactive,
-  computed,
-  watchEffect,
-} from "vue";
+import { ref, toRefs, computed } from "vue";
 import { GEO_URL_API, geoOptionsApi } from "../api";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -109,29 +95,41 @@ const props = defineProps([
   "weatherData",
   "weatherId",
   "weatherFeature",
-  "dailyChart",
-  "weeklyChart",
+  "chartData",
 ]);
-const { weatherData, weatherId, weeklyChart, weatherFeature, dailyChart } =
-  toRefs(props);
-console.log(dailyChart.value);
+const { weatherData, weatherId, weatherFeature, chartData } = toRefs(props);
+console.log(props);
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
 };
 
-const labelsData = ref([]);
-const tempData = ref([]);
+const labelsDayData = ref([]);
+const tempDayData = ref([]);
+const labelsWeekData = ref([]);
+const tempWeekData = ref([]);
 const loaded = ref(false);
 
 const chartDayData = computed(() => {
   return {
-    labels: labelsData.value,
+    labels: labelsDayData.value,
     datasets: [
       {
         label: "Погодинний прогноз",
         backgroundColor: "#ebebeb",
-        data: tempData.value,
+        data: tempDayData.value,
+      },
+    ],
+  };
+});
+const chartWeekData = computed(() => {
+  return {
+    labels: labelsWeekData.value,
+    datasets: [
+      {
+        label: "Температура на 5 днів",
+        backgroundColor: "#ebebeb",
+        data: tempWeekData.value,
       },
     ],
   };
@@ -143,16 +141,37 @@ const showSearchResults = ref(false);
 const isDayWeather = ref("true");
 const cityName = ref("");
 const weatherStatusImg = ref();
+const avgWeekTemp = ref();
+
 setTimeout(() => {
-  for (let i = 0; i < dailyChart.value[0].length; i++) {
-    let item = dailyChart.value[0][i];
+  if (weatherData.value?.weather[0].icon) {
+    weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
+  }
+  const allWeeklyTemp = [];
+  for (let i = 0; i < 8; i++) {
+    let item = chartData.value[0][i];
 
     let date = new Date(item.dt_txt);
     let hourFormat = date.getHours() + " година";
 
-    labelsData.value.push(hourFormat);
-    tempData.value.push(item.main.temp);
+    labelsDayData.value.push(hourFormat);
+    tempDayData.value.push(item.main.temp);
   }
+  for (let i = 0; i < chartData.value[0].length; i++) {
+    let item = chartData.value[0][i];
+    allWeeklyTemp.push(item.main.temp);
+  }
+  let day = 0;
+  for (let i = 0; i < allWeeklyTemp.length; i += 8) {
+    day += 1;
+    const chunk = allWeeklyTemp.slice(i, i + 8);
+    const averageVal = chunk.reduce((a, b) => a + b) / chunk.length;
+    const fixAverageVal = Math.round(averageVal);
+    tempWeekData.value.push(fixAverageVal);
+    labelsWeekData.value.push(day + " день");
+  }
+  avgWeekTemp.value =
+    allWeeklyTemp.reduce((a, b) => a + b) / allWeeklyTemp.length;
   loaded.value = true;
 }, 600);
 
@@ -179,19 +198,46 @@ const getCityWeather = (city, code, id) => {
     if (weatherData.value?.weather[0].icon) {
       weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
     }
-    if (dailyChart.value?.length) {
-      for (let i = 0; i < dailyChart.value[0].length; i++) {
-        let item = dailyChart.value[0][i];
+    const allWeeklyTemp = [];
+    if (chartData.value?.length) {
+      for (let i = 0; i < 8; i++) {
+        let item = chartData.value[0][i];
 
         let date = new Date(item.dt_txt);
         let hourFormat = date.getHours() + " година";
 
-        labelsData.value.push(hourFormat);
-        tempData.value.push(item.main.temp);
+        labelsDayData.value.push(hourFormat);
+        tempDayData.value.push(item.main.temp);
       }
+
+      for (let i = 0; i < chartData.value[0].length; i++) {
+        let item = chartData.value[0][i];
+        allWeeklyTemp.push(item.main.temp);
+      }
+
+      for (let i = 0; i < allWeeklyTemp.length; i += 8) {
+        const chunk = allWeeklyTemp.slice(i, i + 8);
+        const averageVal = chunk.reduce((a, b) => a + b) / chunk.length;
+        const fixAverageVal = Math.round(averageVal);
+        tempWeekData.value.push(fixAverageVal);
+        labelsWeekData.value.push(i);
+        console.log(fixAverageVal);
+      }
+      avgWeekTemp.value =
+        allWeeklyTemp.reduce((a, b) => a + b) / allWeeklyTemp.length;
     }
+
     loaded.value = true;
   }, 600);
+};
+const cardToFeature = () => {
+  store.cardToFeature(weatherData.value.name);
+};
+const removeFromFeature = () => {
+  store.removeFromFeature(weatherData.value.name);
+};
+const deleteCard = () => {
+  store.deleteCard(weatherData.value.name);
 };
 </script>
 <style scoped>
