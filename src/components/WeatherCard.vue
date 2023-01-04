@@ -143,38 +143,6 @@ const cityName = ref("");
 const weatherStatusImg = ref();
 const avgWeekTemp = ref();
 
-setTimeout(() => {
-  if (weatherData.value?.weather[0].icon) {
-    weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
-  }
-  const allWeeklyTemp = [];
-  for (let i = 0; i < 8; i++) {
-    let item = chartData.value[0][i];
-
-    let date = new Date(item.dt_txt);
-    let hourFormat = date.getHours() + " година";
-
-    labelsDayData.value.push(hourFormat);
-    tempDayData.value.push(item.main.temp);
-  }
-  for (let i = 0; i < chartData.value[0].length; i++) {
-    let item = chartData.value[0][i];
-    allWeeklyTemp.push(item.main.temp);
-  }
-  let day = 0;
-  for (let i = 0; i < allWeeklyTemp.length; i += 8) {
-    day += 1;
-    const chunk = allWeeklyTemp.slice(i, i + 8);
-    const averageVal = chunk.reduce((a, b) => a + b) / chunk.length;
-    const fixAverageVal = Math.round(averageVal);
-    tempWeekData.value.push(fixAverageVal);
-    labelsWeekData.value.push(day + " день");
-  }
-  avgWeekTemp.value =
-    allWeeklyTemp.reduce((a, b) => a + b) / allWeeklyTemp.length;
-  loaded.value = true;
-}, 600);
-
 const getCities = () => {
   fetch(
     `${GEO_URL_API}/cities?namePrefix=${cityName.value}&sort=-population`,
@@ -193,42 +161,7 @@ const getCityWeather = (city, code, id) => {
   cityName.value = "";
 
   store.getWeather(city, code, id);
-
-  setTimeout(() => {
-    if (weatherData.value?.weather[0].icon) {
-      weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
-    }
-    const allWeeklyTemp = [];
-    if (chartData.value?.length) {
-      for (let i = 0; i < 8; i++) {
-        let item = chartData.value[0][i];
-
-        let date = new Date(item.dt_txt);
-        let hourFormat = date.getHours() + " година";
-
-        labelsDayData.value.push(hourFormat);
-        tempDayData.value.push(item.main.temp);
-      }
-
-      for (let i = 0; i < chartData.value[0].length; i++) {
-        let item = chartData.value[0][i];
-        allWeeklyTemp.push(item.main.temp);
-      }
-
-      for (let i = 0; i < allWeeklyTemp.length; i += 8) {
-        const chunk = allWeeklyTemp.slice(i, i + 8);
-        const averageVal = chunk.reduce((a, b) => a + b) / chunk.length;
-        const fixAverageVal = Math.round(averageVal);
-        tempWeekData.value.push(fixAverageVal);
-        labelsWeekData.value.push(i);
-        console.log(fixAverageVal);
-      }
-      avgWeekTemp.value =
-        allWeeklyTemp.reduce((a, b) => a + b) / allWeeklyTemp.length;
-    }
-
-    loaded.value = true;
-  }, 600);
+  paintData();
 };
 const cardToFeature = () => {
   store.cardToFeature(weatherData.value.name);
@@ -239,6 +172,40 @@ const removeFromFeature = () => {
 const deleteCard = () => {
   store.deleteCard(weatherData.value.name);
 };
+const paintData = () => {
+  setTimeout(() => {
+    if (weatherData.value?.weather[0].icon) {
+      weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
+    }
+    const allWeeklyTemp = [];
+    for (let i = 0; i < 8; i++) {
+      let item = chartData.value[0][i];
+
+      let date = new Date(item.dt_txt);
+      let hourFormat = date.getHours() + " година";
+      let fixTempVal = Math.round(item.main.temp);
+      labelsDayData.value.push(hourFormat);
+      tempDayData.value.push(fixTempVal);
+    }
+    for (let i = 0; i < chartData.value[0].length; i++) {
+      let item = chartData.value[0][i];
+      allWeeklyTemp.push(item.main.temp);
+    }
+    let day = 0;
+    for (let i = 0; i < allWeeklyTemp.length; i += 8) {
+      day += 1;
+      const chunk = allWeeklyTemp.slice(i, i + 8);
+      const averageVal = chunk.reduce((a, b) => a + b) / chunk.length;
+      const fixAverageVal = Math.round(averageVal);
+      tempWeekData.value.push(fixAverageVal);
+      labelsWeekData.value.push(day + " день");
+    }
+    avgWeekTemp.value =
+      allWeeklyTemp.reduce((a, b) => a + b) / allWeeklyTemp.length;
+    loaded.value = true;
+  }, 600);
+};
+paintData();
 </script>
 <style scoped>
 .main {
