@@ -22,14 +22,14 @@
       </div>
       <button v-if="!weatherFeature" @click="cardToFeature">Обране</button>
       <button v-if="weatherFeature && loaded" @click="removeFromFeature">
-        Убрати
+        Прибрати
       </button>
     </div>
 
     <div class="default" v-if="weatherData && loaded">
       <div>
         <button @click="isDayWeather = true">День</button>
-        <button @click="isDayWeather = false">Неділя</button>
+        <button @click="isDayWeather = false">Тиждень</button>
       </div>
       <div>
         <div>
@@ -98,7 +98,6 @@ const props = defineProps([
   "chartData",
 ]);
 const { weatherData, weatherId, weatherFeature, chartData } = toRefs(props);
-console.log(props);
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,

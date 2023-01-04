@@ -2,43 +2,47 @@
   <div class="main default" :class="[weatherFeature ? 'featured' : '']">
     <div class="default search-featured">
       <button v-if="!weatherFeature" @click="cardToFeature">Обране</button>
-      <button v-if="weatherFeature" @click="removeFromFeature">Убрати</button>
+      <button v-if="weatherFeature && loaded" @click="removeFromFeature">
+        Прибрати
+      </button>
     </div>
 
-    <div class="default" v-if="weatherData">
+    <div class="default" v-if="weatherData && loaded">
       <div>
         <button @click="isDayWeather = true">День</button>
-        <button @click="isDayWeather = false">Неділя</button>
+        <button @click="isDayWeather = false">Тиждень</button>
       </div>
-      <div v-if="isDayWeather">
+      <div>
         <div>
           <div>
             <h2>{{ weatherData.name }}, {{ weatherData.sys?.country }}</h2>
           </div>
-          <div class="current-temp">
+          <div class="current-temp" v-if="loaded && isDayWeather">
             <img :src="weatherStatusImg" v-if="weatherStatusImg" />
-            <h2>{{ Math.round(weatherData.main.temp) }} °C</h2>
+            <h2>{{ Math.round(weatherData.main?.temp) }} °C</h2>
           </div>
-          <div>
+          <div class="current-temp" v-if="loaded && !isDayWeather">
+            <p>Середня температура: &nbsp</p>
+            <h2>{{ Math.round(avgWeekTemp) }} °C</h2>
+          </div>
+          <div v-if="isDayWeather">
             <p>
               Відчувається як:
-              {{ Math.round(weatherData.main.feels_like) }} °C.
-              {{ weatherData.weather[0].description.charAt(0).toUpperCase()
-              }}{{ weatherData.weather[0].description.slice(1) }}
+              {{ Math.round(weatherData.main?.feels_like) }} °C.
+              {{ weatherData?.weather[0].description.charAt(0).toUpperCase()
+              }}{{ weatherData?.weather[0].description.slice(1) }}
             </p>
           </div>
         </div>
-        <div class="default">
+        <div class="default" v-if="isDayWeather && chartData.length">
           <Line :options="chartOptions" :data="chartDayData" />
         </div>
-        <!-- <div
-          class="default"
-          v-if="chartWeekData.labels.length && !isDayWeather"
-        >
+        <div class="default" v-if="!isDayWeather">
           <Line :options="chartOptions" :data="chartWeekData" />
-        </div> -->
+        </div>
       </div>
     </div>
+    <button @click="deleteCard">Видалити</button>
   </div>
 </template>
 
@@ -47,6 +51,7 @@ import { Line } from "vue-chartjs";
 import { defaultStore } from "../store";
 import { ref, toRefs, computed } from "vue";
 import { GEO_URL_API, geoOptionsApi } from "../api";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -71,40 +76,86 @@ const props = defineProps([
   "weatherData",
   "weatherId",
   "weatherFeature",
-  "dailyChart",
-  "weeklyChart",
+  "chartData",
 ]);
-const { weatherData, weatherId, weeklyChart, weatherFeature, dailyChart } =
-  toRefs(props);
+const { weatherData, weatherId, weatherFeature, chartData } = toRefs(props);
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
 };
-const labelsData = ref([]);
-const tempData = ref([]);
+
+const labelsDayData = ref([]);
+const tempDayData = ref([]);
+const labelsWeekData = ref([]);
+const tempWeekData = ref([]);
+const loaded = ref(false);
+
 const chartDayData = computed(() => {
   return {
-    labels: labelsData.value,
+    labels: labelsDayData.value,
     datasets: [
       {
         label: "Погодинний прогноз",
         backgroundColor: "#ebebeb",
-        data: tempData.value,
+        data: tempDayData.value,
       },
     ],
   };
 });
+const chartWeekData = computed(() => {
+  return {
+    labels: labelsWeekData.value,
+    datasets: [
+      {
+        label: "Температура на 5 днів",
+        backgroundColor: "#ebebeb",
+        data: tempWeekData.value,
+      },
+    ],
+  };
+});
+const store = defaultStore();
+const searchResults = ref("");
+const showSearchResults = ref(false);
 const isDayWeather = ref("true");
+const cityName = ref("");
 const weatherStatusImg = ref();
-for (let i = 0; i < dailyChart.value[0].length; i++) {
-  let item = dailyChart.value[0][i];
+const avgWeekTemp = ref();
 
-  let date = new Date(item.dt_txt);
-  let hourFormat = date.getHours() + " година";
+const paintData = () => {
+  setTimeout(() => {
+    if (weatherData.value?.weather[0].icon) {
+      weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
+    }
+    const allWeeklyTemp = [];
+    for (let i = 0; i < 8; i++) {
+      let item = chartData.value[0][i];
 
-  labelsData.value.push(hourFormat);
-  tempData.value.push(item.main.temp);
-}
+      let date = new Date(item.dt_txt);
+      let hourFormat = date.getHours() + " год.";
+      let fixTempVal = Math.round(item.main.temp);
+      labelsDayData.value.push(hourFormat);
+      tempDayData.value.push(fixTempVal);
+    }
+    for (let i = 0; i < chartData.value[0].length; i++) {
+      let item = chartData.value[0][i];
+      allWeeklyTemp.push(item.main.temp);
+    }
+    let day = 0;
+    for (let i = 0; i < allWeeklyTemp.length; i += 8) {
+      day += 1;
+      const chunk = allWeeklyTemp.slice(i, i + 8);
+      const averageVal = chunk.reduce((a, b) => a + b) / chunk.length;
+      const fixAverageVal = Math.round(averageVal);
+      tempWeekData.value.push(fixAverageVal);
+      labelsWeekData.value.push(day + " день");
+    }
+    avgWeekTemp.value =
+      allWeeklyTemp.reduce((a, b) => a + b) / allWeeklyTemp.length;
+    loaded.value = true;
+  }, 600);
+};
+paintData();
 </script>
 
 <style scoped>

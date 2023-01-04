@@ -23,6 +23,7 @@ import WeatherCard from "./WeatherCard.vue";
 
 import TheAddWeatherCard from "./TheAddWeatherCard.vue";
 import { defaultStore } from "../store";
+import { watchEffect } from "vue";
 const store = defaultStore();
 </script>
 

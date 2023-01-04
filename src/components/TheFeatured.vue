@@ -6,8 +6,7 @@
       :weather-data="item.data"
       :weather-id="item.id"
       :weather-feature="item.featured"
-      :daily-chart="item.dailyChart"
-      :weekly-chart="item.weeklyChart"
+      :chart-data="item.chart"
     />
   </div>
 </template>
@@ -15,6 +14,7 @@
 <script setup>
 import TheWeatherFeaturedCard from "./TheWeatherFeaturedCard.vue";
 import { defaultStore } from "../store";
+import { watchEffect, ref, computed } from "vue";
 const store = defaultStore();
 </script>
 

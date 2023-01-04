@@ -2,16 +2,12 @@
   <div class="container">
     <TheLogo></TheLogo>
     <div>
-      <button @click="isShowMain = true">Главная</button>
-      <button @click="isShowMain = false">Избранное</button>
+      <button @click="isShowMain = true">Головна</button>
+      <button @click="isShowMain = false">Обране</button>
     </div>
     <div>
-      <TheMain
-        v-if="isShowMain"
-        :the-cards="theCards"
-        :the-featured="theFeatured"
-      />
-      <TheFeatured v-else :the-featured="theFeatured" />
+      <TheMain v-if="isShowMain" />
+      <TheFeatured v-else />
     </div>
   </div>
 </template>
@@ -20,50 +16,53 @@ import { defaultStore } from "./store";
 import TheLogo from "./components/TheLogo.vue";
 import TheMain from "./components/TheMain.vue";
 import TheFeatured from "./components/TheFeatured.vue";
-import { ref, watch, provide, watchEffect, onMounted } from "vue";
-import { OPEN_WEATHER_URL_API, openWeatherApiKey } from "./api";
+import { ref, watchEffect, onMounted } from "vue";
+const store = defaultStore();
 
 const isShowMain = ref(true);
-const theCards = ref([]);
-const theFeatured = ref([]);
 if (localStorage.getItem("featured") === null) {
   console.log("empty");
 } else {
-  theFeatured.value = JSON.parse(localStorage.getItem("featured"));
-  if (theFeatured.value.length) {
-    console.log(theFeatured.value);
+  console.log("exist");
+
+  console.log(JSON.parse(localStorage.getItem("featured")));
+  const storageFeatured = JSON.parse(localStorage.getItem("featured"));
+  if (storageFeatured.length) {
+    store.theFeaturedCards = storageFeatured;
+  } else {
+    console.log("empty");
   }
+  // theFeatured.value = JSON.parse(localStorage.getItem("featured"));
+  // if (theFeatured.value.length) {
+  //   console.log(theFeatured.value);
+  // }
 }
 
 onMounted(() => {
   store.getCurrentLocationWeather();
   watchEffect(() => {
-    localStorage.setItem("featured", JSON.stringify(theFeatured.value));
+    localStorage.setItem("featured", JSON.stringify(store.featured));
   });
 });
 
-const deleteCard = (id) => {
-  theCards.value = theCards.value.filter((e) => e.id !== id);
-};
-const deleteFeature = (name) => {
-  theFeatured.value = theFeatured.value.filter((e) => {
-    if (e.data.name === name) {
-      e.featured = false;
-    } else {
-      return e;
-    }
-  });
-};
-provide("theFeatured", theFeatured.value);
-provide("delete", deleteCard);
-provide("removeFeature", deleteFeature);
-
 // pinia
-const store = defaultStore();
 </script>
-<style scoped>
+<style>
 .container {
   max-width: 1200px;
   margin: 20px auto;
+}
+button {
+  border: 1px solid #ebebeb;
+  background-color: hsl(0, 0%, 92%);
+  padding: 0.275rem;
+  margin: auto 0.15rem;
+  transition: all 0.3s;
+  color: hsl(0, 0%, 0%);
+}
+button:hover {
+  cursor: pointer;
+  background-color: hsl(0, 0%, 99%);
+  color: hsl(0, 0%, 0%);
 }
 </style>
