@@ -34,7 +34,6 @@ export const defaultStore = defineStore("main", {
           data: {},
           chart: [],
         };
-        // let dailyChart = this.getDailyChart(null, null, lat, lon);
 
         fetch(
           `${OPEN_WEATHER_URL_API}/weather?lat=${lat}&lon=${lon}&units=metric&cnt=8&lang=ua&appid=${openWeatherApiKey}`
@@ -44,6 +43,12 @@ export const defaultStore = defineStore("main", {
           })
           .then((response) => {
             currentLocation.data = response;
+            const featuredCard = this.theFeaturedCards.filter(
+              (e) => e.data.name === response.name
+            );
+            if (featuredCard.length) {
+              currentLocation.featured = true;
+            }
           })
           .then(() => {
             currentLocation.chart = currentChart;
@@ -59,9 +64,19 @@ export const defaultStore = defineStore("main", {
     },
     getWeather(city, code, id) {
       this.existCard = this.theCards.filter((e) => e.data.name === city);
+
       if (this.existCard[0]) {
         alert("exist");
       } else {
+        let featureStatus = false;
+
+        const featuredCard = this.theFeaturedCards.filter(
+          (e) => e.data.name === city
+        );
+
+        if (featuredCard.length) {
+          featureStatus = true;
+        }
         const currentCard = this.theCards.filter((e) => e.id === id);
         const currentChart = this.getChartData(city, code);
         fetch(
@@ -70,6 +85,7 @@ export const defaultStore = defineStore("main", {
           .then((response) => response.json())
           .then((response) => {
             currentCard[0].data = response;
+            currentCard[0].featured = featureStatus;
           })
           .then(() => {
             currentCard[0].chart = currentChart;
@@ -102,14 +118,19 @@ export const defaultStore = defineStore("main", {
     },
 
     cardToFeature(name) {
-      const currentCard = this.theCards.filter((e) => e.data.name === name);
-      currentCard[0].featured = true;
-      this.theFeaturedCards.push(currentCard[0]);
+      if (this.theFeaturedCards.length < 5) {
+        const currentCard = this.theCards.filter((e) => e.data.name === name);
+        currentCard[0].featured = true;
+        this.theFeaturedCards.push(currentCard[0]);
+      } else {
+        alert("maximum 5 cards");
+      }
     },
     removeFromFeature(name) {
       const currentCard = this.theFeaturedCards.filter(
         (e) => e.data.name === name
       );
+
       currentCard[0].featured = false;
       this.theFeaturedCards = this.theFeaturedCards.filter(
         (e) => e.data.name !== name

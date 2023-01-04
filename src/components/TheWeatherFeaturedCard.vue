@@ -1,12 +1,5 @@
 <template>
   <div class="main default" :class="[weatherFeature ? 'featured' : '']">
-    <div class="default search-featured">
-      <button v-if="!weatherFeature" @click="cardToFeature">Обране</button>
-      <button v-if="weatherFeature && loaded" @click="removeFromFeature">
-        Прибрати
-      </button>
-    </div>
-
     <div class="default" v-if="weatherData && loaded">
       <div>
         <button @click="isDayWeather = true">День</button>
@@ -42,7 +35,7 @@
         </div>
       </div>
     </div>
-    <button @click="deleteCard">Видалити</button>
+    <button @click="removeFromFeature">Видалити</button>
   </div>
 </template>
 
@@ -50,7 +43,6 @@
 import { Line } from "vue-chartjs";
 import { defaultStore } from "../store";
 import { ref, toRefs, computed } from "vue";
-import { GEO_URL_API, geoOptionsApi } from "../api";
 
 import {
   Chart as ChartJS,
@@ -115,18 +107,16 @@ const chartWeekData = computed(() => {
   };
 });
 const store = defaultStore();
-const searchResults = ref("");
-const showSearchResults = ref(false);
+
 const isDayWeather = ref("true");
-const cityName = ref("");
+
 const weatherStatusImg = ref();
 const avgWeekTemp = ref();
 
 const paintData = () => {
   setTimeout(() => {
-    if (weatherData.value?.weather[0].icon) {
-      weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
-    }
+    weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
+
     const allWeeklyTemp = [];
     for (let i = 0; i < 8; i++) {
       let item = chartData.value[0][i];
@@ -153,9 +143,12 @@ const paintData = () => {
     avgWeekTemp.value =
       allWeeklyTemp.reduce((a, b) => a + b) / allWeeklyTemp.length;
     loaded.value = true;
-  }, 600);
+  }, 0);
 };
 paintData();
+const removeFromFeature = () => {
+  store.removeFromFeature(weatherData.value.name);
+};
 </script>
 
 <style scoped>

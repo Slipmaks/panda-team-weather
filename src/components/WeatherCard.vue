@@ -41,7 +41,7 @@
             <h2>{{ Math.round(weatherData.main?.temp) }} °C</h2>
           </div>
           <div class="current-temp" v-if="loaded && !isDayWeather">
-            <p>Середня температура:</p>
+            <p>Середня температура: &nbsp</p>
             <h2>{{ Math.round(avgWeekTemp) }} °C</h2>
           </div>
           <div v-if="isDayWeather">
@@ -173,9 +173,8 @@ const deleteCard = () => {
 };
 const paintData = () => {
   setTimeout(() => {
-    if (weatherData.value?.weather[0].icon) {
-      weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
-    }
+    weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
+
     const allWeeklyTemp = [];
     for (let i = 0; i < 8; i++) {
       let item = chartData.value[0][i];

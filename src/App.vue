@@ -23,14 +23,10 @@ const isShowMain = ref(true);
 if (localStorage.getItem("featured") === null) {
   console.log("empty");
 } else {
-  console.log("exist");
-
-  console.log(JSON.parse(localStorage.getItem("featured")));
   const storageFeatured = JSON.parse(localStorage.getItem("featured"));
   if (storageFeatured.length) {
     store.theFeaturedCards = storageFeatured;
   } else {
-    console.log("empty");
   }
   // theFeatured.value = JSON.parse(localStorage.getItem("featured"));
   // if (theFeatured.value.length) {
