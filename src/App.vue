@@ -1,4 +1,5 @@
 <template>
+  <ModalVue />
   <div class="container">
     <TheLogo></TheLogo>
     <div>
@@ -16,6 +17,7 @@ import { defaultStore } from "./store";
 import TheLogo from "./components/TheLogo.vue";
 import TheMain from "./components/TheMain.vue";
 import TheFeatured from "./components/TheFeatured.vue";
+import ModalVue from "./components/Modal.vue";
 import { ref, watchEffect, onMounted } from "vue";
 const store = defaultStore();
 
@@ -28,10 +30,6 @@ if (localStorage.getItem("featured") === null) {
     store.theFeaturedCards = storageFeatured;
   } else {
   }
-  // theFeatured.value = JSON.parse(localStorage.getItem("featured"));
-  // if (theFeatured.value.length) {
-  //   console.log(theFeatured.value);
-  // }
 }
 
 onMounted(() => {
@@ -46,7 +44,7 @@ onMounted(() => {
 <style>
 .container {
   max-width: 1200px;
-  margin: 20px auto;
+  margin: auto auto;
 }
 button {
   border: 1px solid #ebebeb;

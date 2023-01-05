@@ -12,6 +12,7 @@ export const defaultStore = defineStore("main", {
       theCards: [],
       theFeaturedCards: [],
       isExistCity: [],
+      modalMessage: "",
     };
   },
   actions: {
@@ -66,7 +67,7 @@ export const defaultStore = defineStore("main", {
       this.existCard = this.theCards.filter((e) => e.data.name === city);
 
       if (this.existCard[0]) {
-        alert("exist");
+        this.modalMessage = "Город існує";
       } else {
         let featureStatus = false;
 
@@ -123,7 +124,7 @@ export const defaultStore = defineStore("main", {
         currentCard[0].featured = true;
         this.theFeaturedCards.push(currentCard[0]);
       } else {
-        alert("maximum 5 cards");
+        this.modalMessage = "Максимум 5 обраних";
       }
     },
     removeFromFeature(name) {

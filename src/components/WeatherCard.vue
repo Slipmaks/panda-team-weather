@@ -173,7 +173,7 @@ const deleteCard = () => {
 };
 const paintData = () => {
   setTimeout(() => {
-    weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
+    // weatherStatusImg.value = `http://openweathermap.org/img/wn/${weatherData.value?.weather[0].icon}.png`;
 
     const allWeeklyTemp = [];
     for (let i = 0; i < 8; i++) {
